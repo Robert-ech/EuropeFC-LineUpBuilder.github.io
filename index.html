@@ -15,7 +15,7 @@
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
             min-height: 100vh;
-            padding: 20px;
+            padding: 10px;
         }
 
         .container {
@@ -27,15 +27,17 @@
             background: white;
             border-radius: 12px;
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            padding: 24px;
-            margin-bottom: 24px;
+            padding: 16px;
+            margin-bottom: 16px;
         }
 
         .header-top {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 16px;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+            gap: 12px;
         }
 
         .header-title {
@@ -45,7 +47,7 @@
         }
 
         h1 {
-            font-size: 28px;
+            font-size: 24px;
             color: #1f2937;
         }
 
@@ -82,13 +84,13 @@
         .main-content {
             display: flex;
             flex-direction: column;
-            gap: 24px;
+            gap: 16px;
         }
 
         .field-container {
             background: white;
             border-radius: 12px;
-            padding: 20px;
+            padding: 12px;
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
         }
 
@@ -158,6 +160,7 @@
             flex-direction: column;
             align-items: center;
             gap: 4px;
+            touch-action: none;
         }
 
         .player-avatar {
@@ -237,7 +240,7 @@
         .bench {
             background: white;
             border-radius: 12px;
-            padding: 20px;
+            padding: 16px;
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
         }
 
@@ -245,11 +248,11 @@
             display: flex;
             align-items: center;
             gap: 8px;
-            margin-bottom: 16px;
+            margin-bottom: 12px;
         }
 
         .bench-header h2 {
-            font-size: 20px;
+            font-size: 18px;
             color: #1f2937;
         }
 
@@ -309,14 +312,110 @@
         }
 
         @media (max-width: 768px) {
+            h1 {
+                font-size: 18px;
+            }
+
+            .icon-users {
+                width: 24px;
+                height: 24px;
+            }
+
+            .reset-btn {
+                padding: 8px 12px;
+                font-size: 14px;
+            }
+
+            .subtitle {
+                font-size: 14px;
+            }
+
             .bench-players {
                 grid-template-columns: repeat(3, 1fr);
+                gap: 8px;
+            }
+
+            .player-card {
+                padding: 8px;
+                min-height: 60px;
+            }
+
+            .player-card-name {
+                font-size: 12px;
+            }
+
+            .player-card-username {
+                font-size: 10px;
+            }
+
+            .player-avatar {
+                width: 40px;
+                height: 40px;
+            }
+
+            .player-avatar svg {
+                width: 24px;
+                height: 24px;
+            }
+
+            .player-name-tag {
+                font-size: 10px;
+                padding: 1px 6px;
+            }
+
+            .field {
+                max-height: 300px;
             }
         }
 
         @media (max-width: 480px) {
+            body {
+                padding: 5px;
+            }
+
+            h1 {
+                font-size: 16px;
+            }
+
+            .header {
+                padding: 12px;
+                margin-bottom: 12px;
+            }
+
+            .reset-btn {
+                padding: 6px 10px;
+                font-size: 12px;
+            }
+
             .bench-players {
                 grid-template-columns: repeat(2, 1fr);
+                gap: 6px;
+            }
+
+            .bench-header h2 {
+                font-size: 16px;
+            }
+
+            .player-card {
+                padding: 6px;
+                min-height: 55px;
+            }
+
+            .player-card-name {
+                font-size: 11px;
+            }
+
+            .player-card-username {
+                font-size: 9px;
+            }
+
+            .star-icon {
+                width: 14px;
+                height: 14px;
+            }
+
+            .field {
+                max-height: 250px;
             }
         }
     </style>
@@ -526,6 +625,92 @@
             const availableCount = playersList.length - fieldPlayers.length;
             document.getElementById('bench-count').textContent = availableCount;
         }
+
+        field.addEventListener('touchstart', (e) => {
+            const touch = e.touches[0];
+            const target = document.elementFromPoint(touch.clientX, touch.clientY);
+            const playerCard = target.closest('.player-on-field');
+            
+            if (playerCard) {
+                e.preventDefault();
+                draggedPlayer = playersList.find(p => p.id === playerCard.dataset.playerId);
+                draggedElement = playerCard;
+                playerCard.classList.add('dragging');
+            }
+        });
+
+        field.addEventListener('touchmove', (e) => {
+            if (!draggedPlayer || !draggedElement) return;
+            e.preventDefault();
+            
+            const touch = e.touches[0];
+            const rect = field.getBoundingClientRect();
+            const x = ((touch.clientX - rect.left) / rect.width) * 100;
+            const y = ((touch.clientY - rect.top) / rect.height) * 100;
+            
+            draggedElement.style.left = x + '%';
+            draggedElement.style.top = y + '%';
+        });
+
+        field.addEventListener('touchend', (e) => {
+            if (!draggedPlayer || !draggedElement) return;
+            e.preventDefault();
+            
+            const existingPlayer = fieldPlayers.find(p => p.id === draggedPlayer.id);
+            if (existingPlayer) {
+                existingPlayer.x = parseFloat(draggedElement.style.left);
+                existingPlayer.y = parseFloat(draggedElement.style.top);
+            }
+            
+            draggedElement.classList.remove('dragging');
+            draggedPlayer = null;
+            draggedElement = null;
+        });
+
+        bench.addEventListener('touchstart', (e) => {
+            const touch = e.touches[0];
+            const target = document.elementFromPoint(touch.clientX, touch.clientY);
+            const playerCard = target.closest('.player-card');
+            
+            if (playerCard) {
+                e.preventDefault();
+                draggedPlayer = playersList.find(p => p.id === playerCard.dataset.playerId);
+                draggedElement = playerCard;
+                playerCard.classList.add('dragging');
+            }
+        });
+
+        bench.addEventListener('touchmove', (e) => {
+            if (!draggedPlayer) return;
+            e.preventDefault();
+        });
+
+        bench.addEventListener('touchend', (e) => {
+            if (!draggedPlayer) return;
+            e.preventDefault();
+            
+            const touch = e.changedTouches[0];
+            const rect = field.getBoundingClientRect();
+            
+            if (touch.clientX >= rect.left && touch.clientX <= rect.right &&
+                touch.clientY >= rect.top && touch.clientY <= rect.bottom) {
+                
+                const x = ((touch.clientX - rect.left) / rect.width) * 100;
+                const y = ((touch.clientY - rect.top) / rect.height) * 100;
+                
+                if (fieldPlayers.length < 7) {
+                    fieldPlayers.push({ ...draggedPlayer, x, y });
+                    renderBench();
+                    renderField();
+                }
+            }
+            
+            if (draggedElement) {
+                draggedElement.classList.remove('dragging');
+            }
+            draggedPlayer = null;
+            draggedElement = null;
+        });
 
         function resetLineup() {
             fieldPlayers = [];
