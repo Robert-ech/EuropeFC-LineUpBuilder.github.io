@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>7v7 Soccer Lineup Builder</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .field-gradient {
+            background-image: linear-gradient(0deg, #16a34a 0%, #16a34a 50%, #15803d 50%, #15803d 100%);
+        }
+    </style>
+</head>
+<body>
+    <div id="app"></div>
+
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <script type="text/babel">
+        const { useState } = React;
+
+        const SoccerLineupBuilder = () => {
+            const playersList = [
+                { id: 'jey', name: 'Jey', username: 'jeydden' },
+                { id: 'kyle', name: 'Kyle', username: 'k_shir77' },
+                { id: 'phillip', name: 'Phillip Hernandez', username: 'philllippines' },
+                { id: 'enrique', name: 'Enrique', username: 'qab3302' },
+                { id: 'sam', name: 'Sam', username: 'sambrvo14' },
+                { id: 'jonah', name: 'Jonah', username: '415jonah' },
+                { id: 'river', name: 'River Chase Lassoff', username: 'b3y0ufr' },
+                { id: 'bogan', name: 'Bogan', username: 'boganchalex' },
+                { id: 'bryan', name: 'Bryan Huang', username: 'bryanmhuang' },
+                { id: 'ryan', name: 'Ryan Lee', username: 'definintely_not_ryan' },
+                { id: 'jsanch', name: 'Jsanch', username: 'jsanchz77' },
+                { id: 'landon', name: 'Landon Cribari', username: 'landcrib07' },
+                { id: 'robert', name: 'Robert Bobbert', username: 'r.bob18' },
+                { id: 'gian', name: 'Gian', username: 'roblegian' },
+                { id: 'santiago', name: 'Santiago Avila', username: 'santiagoavilabreach' },
+                { id: 'sliitical', name: 'Sliitical', username: 'sliitical_' },
+                { id: 'tyler', name: 'Tyler Yuen', username: 'tylenator_omnom291' },
+                { id: 'isaac', name: 'Isaac', username: 'uehxndyyw' }
+            ];
+
+            const [availablePlayers, setAvailablePlayers] = useState(playersList);
+            const [fieldPlayers, setFieldPlayers] = useState([]);
+            const [draggedPlayer, setDraggedPlayer] = useState(null);
+
+            const handleDragStart = (e, player, source) => {
+                setDraggedPlayer({ player, source });
+                e.dataTransfer.effectAllowed = 'move';
+            };
+
+            const handleDragOver = (e) => {
+                e.preventDefault();
+                e.dataTransfer.dropEffect = 'move';
+            };
+
+            const handleDropOnField = (e) => {
+                e.preventDefault();
+                if (!draggedPlayer) return;
+
+                const rect = e.currentTarget.getBoundingClientRect();
+                const x = ((e.clientX - rect.left) / rect.width) * 100;
+                const y = ((e.clientY - rect.top) / rect.height) * 100;
+
+                if (draggedPlayer.source === 'bench') {
+                    if (fieldPlayers.length < 7) {
+                        setFieldPlayers([...fieldPlayers, { ...draggedPlayer.player, x, y }]);
+                        setAvailablePlayers(availablePlayers.filter(p => p.id !== draggedPlayer.player.id));
+                    }
+                } else {
+                    setFieldPlayers(fieldPlayers.map(p => 
+                        p.id === draggedPlayer.player.id ? { ...p, x, y } : p
+                    ));
+                }
+                setDraggedPlayer(null);
+            };
+
+            const handleDropOnBench = (e) => {
+                e.preventDefault();
+                if (!draggedPlayer || draggedPlayer.source === 'bench') return;
+
+                setAvailablePlayers([...availablePlayers, draggedPlayer.player]);
+                setFieldPlayers(fieldPlayers.filter(p => p.id !== draggedPlayer.player.id));
+                setDraggedPlayer(null);
+            };
+
+            const handleReset = () => {
+                setAvailablePlayers(playersList);
+                setFieldPlayers([]);
+            };
+
+            return (
+                <div className="min-h-screen bg-gradient-to-br from-green-50 to-green-100 p-4">
+                    <div className="max-w-7xl mx-auto">
+                        <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
+                            <div className="flex items-center justify-between mb-4">
+                                <div className="flex items-center gap-3">
+                                    <svg className="text-green-600" width="32" height="32" fill="currentColor" viewBox="0 0 24 24">
+                                        <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/>
+                                    </svg>
+                                    <h1 className="text-3xl font-bold text-gray-800">7v7 Soccer Lineup Builder</h1>
+                                </div>
+                                <button
+                                    onClick={handleReset}
+                                    className="flex items-center gap-2 bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition"
+                                >
+                                    <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/>
+                                    </svg>
+                                    Reset
+                                </button>
+                            </div>
+                            <p className="text-gray-600">Drag players from the bench onto the field to create your lineup ({fieldPlayers.length}/7)</p>
+                        </div>
+
+                        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+                            {/* Soccer Field */}
+                            <div className="lg:col-span-3">
+                                <div
+                                    className="relative field-gradient rounded-lg shadow-xl overflow-hidden"
+                                    style={{
+                                        aspectRatio: '3/2',
+                                        minHeight: '500px'
+                                    }}
+                                    onDragOver={handleDragOver}
+                                    onDrop={handleDropOnField}
+                                >
+                                    {/* Field markings */}
+                                    <div className="absolute inset-0 pointer-events-none">
+                                        {/* Center circle */}
+                                        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-32 h-32 rounded-full border-2 border-white opacity-30"></div>
+                                        {/* Center line */}
+                                        <div className="absolute top-0 left-1/2 w-0.5 h-full bg-white opacity-30"></div>
+                                        {/* Penalty boxes */}
+                                        <div className="absolute top-1/2 left-0 transform -translate-y-1/2 w-24 h-48 border-2 border-r-0 border-white opacity-30"></div>
+                                        <div className="absolute top-1/2 right-0 transform -translate-y-1/2 w-24 h-48 border-2 border-l-0 border-white opacity-30"></div>
+                                    </div>
+
+                                    {/* Players on field */}
+                                    {fieldPlayers.map((player) => (
+                                        <div
+                                            key={player.id}
+                                            draggable
+                                            onDragStart={(e) => handleDragStart(e, player, 'field')}
+                                            className="absolute transform -translate-x-1/2 -translate-y-1/2 cursor-move"
+                                            style={{
+                                                left: `${player.x}%`,
+                                                top: `${player.y}%`
+                                            }}
+                                        >
+                                            <div className="flex flex-col items-center gap-1">
+                                                <div className="bg-blue-500 rounded-full w-12 h-12 flex items-center justify-center shadow-lg hover:bg-blue-600 transition border-2 border-white">
+                                                    <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
+                                                        <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                                                    </svg>
+                                                </div>
+                                                <span className="text-xs font-bold text-white bg-black bg-opacity-50 px-2 py-0.5 rounded">{player.name}</span>
+                                            </div>
+                                        </div>
+                                    ))}
+
+                                    {fieldPlayers.length === 0 && (
+                                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                                            <p className="text-white text-xl font-semibold opacity-50">Drag players here</p>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* Player Bench */}
+                            <div className="lg:col-span-1">
+                                <div
+                                    className="bg-white rounded-lg shadow-lg p-4"
+                                    onDragOver={handleDragOver}
+                                    onDrop={handleDropOnBench}
+                                >
+                                    <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+                                        <svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24" className="text-gray-600">
+                                            <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/>
+                                        </svg>
+                                        Available Players ({availablePlayers.length})
+                                    </h2>
+                                    <div className="space-y-2 max-h-[600px] overflow-y-auto">
+                                        {availablePlayers.map((player) => (
+                                            <div
+                                                key={player.id}
+                                                draggable
+                                                onDragStart={(e) => handleDragStart(e, player, 'bench')}
+                                                className="bg-gray-100 p-3 rounded-lg cursor-move hover:bg-gray-200 transition border-2 border-gray-300"
+                                            >
+                                                <p className="font-semibold text-gray-800">{player.name}</p>
+                                                <p className="text-xs text-gray-500">@{player.username}</p>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        ReactDOM.render(<SoccerLineupBuilder />, document.getElementById('app'));
+    </script>
+</body>
+</html>
